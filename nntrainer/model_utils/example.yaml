@@ -1,0 +1,10 @@
+type: fc
+params:
+  HID:  3
+modules:
+  -   type: fc
+      shapes: [2,$HID$,1]
+      activate:  ['relu','sigmoid']
+  -   type: fc
+      shapes: [$HID$,2*$HID$,1]
+      activate:  ['relu','sigmoid']

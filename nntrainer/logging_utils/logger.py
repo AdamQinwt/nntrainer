@@ -1,0 +1,39 @@
+from tensorboardX import SummaryWriter
+import os.path as osp
+import time
+import logging
+from pathlib import Path
+
+def create_logger(output_dir,unique_name,need_tb=True):
+    '''
+    create loggers
+    :param output_dir: root of the output path
+    :param unique_name: name
+    :param need_tb: whether tensorboard is needed
+    :return: logger,log dir,summary writer
+    '''
+    root_output_dir = Path(output_dir)
+    if not root_output_dir.exists():
+        print(f'=> creating {root_output_dir}')
+    unique_name = osp.basename(unique_name).split('.')[0]
+    final_output_dir = root_output_dir / unique_name
+    print(f'=> creating {final_output_dir}')
+    final_output_dir.mkdir(parents=True, exist_ok=True)
+
+    time_str = time.strftime('%Y-%m-%d-%H-%M')
+    log_file = '{}_{}.log'.format(unique_name, time_str)
+    final_log_file = final_output_dir / log_file
+    head = '%(asctime)-15s %(message)s'
+    logging.basicConfig(filename=str(final_log_file), format=head)
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    console = logging.StreamHandler()
+    logging.getLogger('').addHandler(console)
+
+    summary_writer=None
+    if need_tb:
+        tensorboard_log_dir = Path(root_output_dir) / (unique_name + "_" + time_str)
+        print(f"=> creating {tensorboard_log_dir}")
+        tensorboard_log_dir.mkdir(parents=True, exist_ok=True)
+        summary_writer = SummaryWriter(log_dir=str(tensorboard_log_dir))
+    return logger, str(final_output_dir), summary_writer
