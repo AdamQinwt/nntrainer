@@ -6,6 +6,7 @@ from nntrainer.model_utils.fc import FCBlock_v2
 from nntrainer.model_utils.convbase import ConvBaseBlock,ResConvBaseBlock
 from nntrainer.model_utils.anode.ode_block import ODEBlock
 from nntrainer.model_utils.view import Cat,View
+from nntrainer.model_utils.trivial import UnitLayer
 def str_replacer(s,params):
     if '$' in s:
         keys = []
@@ -69,6 +70,16 @@ class Factory:
                     print(f'{type} not found!')
                     raise ValueError
         return nn.Sequential(*m)
+    def __add__(self, other):
+        f=Factory()
+        f.register_dict(self.factory_dict)
+        if isinstance(other,Factory):
+            f.register_dict(other.factory_dict)
+        elif isinstance(other,dict):
+            f.register_dict(other)
+        else:
+            raise ValueError(f'Unable to add Factory and {type(other)}')
+        return f
 
 class DefaultNNFactory(Factory):
     def __init__(self):
@@ -77,10 +88,23 @@ class DefaultNNFactory(Factory):
             'fc':FCBlock_v2,
             'conv':ConvBaseBlock,
             'res_conv':ResConvBaseBlock,
+            'classic_image_fmfc':FixedOutputClassicImageModel,
             'anode':ODEBlock,
             'cat':Cat,
             'view':View,
         })
+
+from torchvision import models
+
+class FixedOutputClassicImageModel(UnitLayer):
+    '''
+    A classic model(like resnet18) followed by a fixed-output linear layer.
+    '''
+    def __init__(self,model_name,n_out,pretrained=True):
+        super(FixedOutputClassicImageModel,self).__init__()
+        model = models.__dict__[model_name](pretrained=pretrained)
+        model.fc = nn.Linear(model.fc.in_features, n_out)
+        self.main=model
 
 class NetworkFromFactory(nn.Module):
     def __init__(self,factory,modules):
