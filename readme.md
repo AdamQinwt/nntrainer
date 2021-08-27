@@ -9,7 +9,8 @@ nntrainer is a set of tools based on PyTorch. It is intended to enable quick and
 
 ## Installation
 
-```git clone https://github.com/AdamQinwt/nntrainer.git
+```
+git clone https://github.com/AdamQinwt/nntrainer.git
 cd nntrainer
 python setup.py build
 python setup.py install
