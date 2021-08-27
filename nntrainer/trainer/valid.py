@@ -1,51 +1,20 @@
 from trainer.am import AverageMeter
 
-def valid(model,criterion,loader,*args,**kwargs):
-    model.eval()
-    valid_loss = AverageMeter()
-    for x,y_ in loader:
-        y=model(x,*args,**kwargs)
-        loss=criterion(y,y_)
-        avg = valid_loss + (loss.detach().item(), x[0].size(0))
-    return valid_loss.avg
+def accuracy(output, target, topk=(1,)):
+    """ Computes the precision@k for the specified values of k """
+    maxk = max(topk)
+    batch_size = target.size(0)
 
-def valid_cls(model,loader,*args,**kwargs):
-    model.eval()
-    correct,total=0.0,0.0
-    for x,y_ in loader:
-        y=model(x,*args,**kwargs).detach()
-        y_=y_.argmax(1,keepdim=True)
-        y=y.argmax(1,keepdim=True)
-        c=(y==y_).sum()
-        # print(y,y_,y==y_)
-        correct+=c
-        total+=x.size(0)
-    # print(correct,total)
-    return correct/total
+    _, pred = output.topk(maxk, 1, True, True)
+    pred = pred.t()
+    # one-hot case
+    if target.ndimension() > 1:
+        target = target.max(1)[1]
 
-def valid_cuda(model,criterion,loader,*args,**kwargs):
-    model.eval()
-    valid_loss = AverageMeter()
-    for x,y_ in loader:
-        x=x.cuda()
-        y_=y_.cuda()
-        y=model(x,*args,**kwargs)
-        loss=criterion(y,y_)
-        avg = valid_loss + (loss.detach().cpu().item(), x[0].size(0))
-    return valid_loss.avg
+    correct = pred.eq(target.view(1, -1).expand_as(pred))
 
-def valid_clscuda(model,loader,*args,**kwargs):
-    model.eval()
-    correct,total=0.0,0.0
-    for x,y_ in loader:
-        x = x.cuda()
-        y_ = y_.cuda()
-        y=model(x,*args,**kwargs).detach().cpu()
-        y_=y_.argmax(1,keepdim=True)
-        y=y.argmax(1,keepdim=True)
-        c=(y==y_).sum()
-        # print(y,y_,y==y_)
-        correct+=c
-        total+=x.size(0)
-    # print(correct,total)
-    return correct/total
+    res = []
+    for k in topk:
+        correct_k = correct[:k].view(-1).float().sum(0)
+        res.append(correct_k.mul_(1.0 / batch_size))
+    return res
