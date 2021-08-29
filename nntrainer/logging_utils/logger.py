@@ -4,12 +4,13 @@ import time
 import logging
 from pathlib import Path
 
-def create_logger(output_dir,unique_name,need_tb=True):
+def create_logger(output_dir,unique_name,need_tb=True,need_timestamp=True):
     '''
     create loggers
     :param output_dir: root of the output path
     :param unique_name: name
     :param need_tb: whether tensorboard is needed
+    :param need_timestamp: whether timestamp is needed
     :return: logger,log dir,summary writer
     '''
     root_output_dir = Path(output_dir)
@@ -21,7 +22,10 @@ def create_logger(output_dir,unique_name,need_tb=True):
     final_output_dir.mkdir(parents=True, exist_ok=True)
 
     time_str = time.strftime('%Y-%m-%d-%H-%M')
-    log_file = '{}_{}.log'.format(unique_name, time_str)
+    if need_timestamp:
+        log_file = '{}_{}.log'.format(unique_name, time_str)
+    else:
+        log_file = '{}.log'.format(unique_name)
     final_log_file = final_output_dir / log_file
     head = '%(asctime)-15s %(message)s'
     logging.basicConfig(filename=str(final_log_file), format=head)
@@ -36,6 +40,7 @@ def create_logger(output_dir,unique_name,need_tb=True):
         print(f"=> creating {tensorboard_log_dir}")
         tensorboard_log_dir.mkdir(parents=True, exist_ok=True)
         summary_writer = SummaryWriter(log_dir=str(tensorboard_log_dir))
+    logger.info(time_str)
     return logger, str(final_output_dir), summary_writer
 
 import sys
