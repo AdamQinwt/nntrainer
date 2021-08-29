@@ -37,3 +37,36 @@ def create_logger(output_dir,unique_name,need_tb=True):
         tensorboard_log_dir.mkdir(parents=True, exist_ok=True)
         summary_writer = SummaryWriter(log_dir=str(tensorboard_log_dir))
     return logger, str(final_output_dir), summary_writer
+
+import sys
+def cmd_params():
+    s=sys.argv
+    return str(s)
+
+def enumerable2str(en,indent=0):
+    s=''
+    ind='\t'*indent
+    if isinstance(en, str) or isinstance(en, int)or isinstance(en, float):
+        s += f'{ind}{en}\n'
+    elif isinstance(en, dict):
+        for k,v in en.items():
+            s += f'{ind}{k}:\n'
+            s+=enumerable2str(v,indent+1)
+    elif isinstance(en, list) or isinstance(en, tuple):
+        s += f'{ind}[\n'
+        for v in en:
+            s+=enumerable2str(v,indent+1)
+        s+=f'{ind}]\n'
+    return s
+
+if __name__=='__main__':
+    import easydict
+    a=easydict.EasyDict()
+    a.model=easydict.EasyDict()
+    a.model.model_a='hello'
+    a.model.model_b=10
+    a.model.model_c=[-5,6,-7]
+    a.data=easydict.EasyDict()
+    a.data.i1='b1'
+    s=enumerable2str(a)
+    print(s)
