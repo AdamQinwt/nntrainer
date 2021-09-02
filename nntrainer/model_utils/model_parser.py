@@ -7,6 +7,7 @@ from nntrainer.model_utils.convbase import ConvBaseBlock,ResConvBaseBlock
 from nntrainer.model_utils.anode.ode_block import ODEBlock
 from nntrainer.model_utils.view import Cat,View
 from nntrainer.model_utils.trivial import UnitLayer
+from nntrainer.model_utils.attention import CBAMBlock,BAMBlock,SEBlock,ResAttBlock
 def str_replacer(s,params):
     if '$' in s:
         keys = []
@@ -87,7 +88,10 @@ class DefaultNNFactory(Factory):
         self.register_dict({
             'fc':FCBlock_v2,
             'conv':ConvBaseBlock,
-            'res_conv':ResConvBaseBlock,
+            'cbam':CBAMBlock,
+            'bam':BAMBlock,
+            'se':SEBlock,
+            'res_att':ResAttBlock,
             'classic_image_fmfc':FixedOutputClassicImageModel,
             'anode':ODEBlock,
             'cat':Cat,
