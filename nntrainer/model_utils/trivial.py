@@ -19,3 +19,15 @@ class UnitLayer(nn.Module):
         super(UnitLayer,self).__init__()
     def forward(self,*args,**kwargs):
         return self.main(*args,**kwargs)
+
+class ActivationLayer(UnitLayer):
+    '''
+    activation layer from name
+    '''
+    def __init__(self,act,*args,**kwargs):
+        super(ActivationLayer,self).__init__()
+        act_dict={'none':EmptyLayer,'sigmoid':nn.Sigmoid,'relu':nn.ReLU,'tanh':nn.Tanh,'lrelu':nn.LeakyReLU}
+        if act in act_dict.keys():
+            self.main=act_dict[act](*args,**kwargs)
+        else:
+            self.main=eval(f'nn.{act}')(*args,**kwargs)

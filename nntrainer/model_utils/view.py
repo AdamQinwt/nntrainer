@@ -16,6 +16,10 @@ class View(nn.Module):
                 shape.append(s)
         return x.view(*shape)
 
+class Flatten(View):
+    def __init__(self):
+        super(Flatten, self).__init__([-2,-1])
+
 class Cat(nn.Module):
     def __init__(self, dim=-1):
         super(Cat, self).__init__()

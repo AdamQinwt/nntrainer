@@ -1,5 +1,6 @@
 import torch.nn as nn
 import torch
+from .trivial import UnitLayer
 
 class ConvBaseBlock(nn.Module):
     def __init__(self,nchannels,ks,pool=2,activate=None,bn=True,bn_track=False,*args,**kwargs):
@@ -77,3 +78,26 @@ class ResConvBaseBlock(nn.Module):
         y=self.main(x)+x
         y=self.pool(y)
         return y
+
+class ConvLayer(UnitLayer):
+    def __init__(self,in_channels,out_channels=None,ks=3,stride=1,bn=True,bn_track=True):
+        super(ConvLayer,self).__init__()
+        if not out_channels:
+            out_channels=in_channels
+        layers=[nn.Conv2d(in_channels,out_channels,ks,stride,ks>>1,bias=not bn)]
+        if bn:
+            layers.append(nn.BatchNorm2d(out_channels,track_running_stats=bn_track))
+        layers.append(nn.ReLU(inplace=True))
+        self.main=nn.Sequential(*layers)
+
+class ResConvLayer(nn.Module):
+    def __init__(self,nchannels,ks=3):
+        super(ResConvLayer,self).__init__()
+        self.main=ConvLayer(nchannels,ks=ks)
+    def forward(self,x):
+        return x+self.main(x)
+
+class ResConvLayers(UnitLayer):
+    def __init__(self,num=1,*args,**kwargs):
+        super(ResConvLayers,self).__init__()
+        self.main=ResConvLayer(*args,**kwargs) if num==1 else nn.Sequential(*[ResConvLayer(*args,**kwargs) for i in range(num)])
