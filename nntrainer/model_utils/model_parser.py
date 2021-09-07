@@ -3,10 +3,10 @@ import torch.nn as nn
 import yaml
 from copy import deepcopy
 from nntrainer.model_utils.fc import FCBlock_v2
-from nntrainer.model_utils.convbase import ConvBaseBlock,ResConvBaseBlock
+from nntrainer.model_utils.convbase import ConvBaseBlock,ResConvBaseBlock,ConvLayer
 from nntrainer.model_utils.anode.ode_block import ODEBlock
 from nntrainer.model_utils.view import Cat,View
-from nntrainer.model_utils.trivial import UnitLayer
+from nntrainer.model_utils.trivial import UnitLayer,EmptyLayer,ChainLayer,ActivationLayer
 from nntrainer.model_utils.attention import CBAMBlock,BAMBlock,SEBlock,ResAttBlock
 def str_replacer(s,params):
     if '$' in s:
@@ -62,6 +62,8 @@ class Factory:
         for mod in modules:
             type=mod['type']
             del mod['type']
+            if 'fetch_factory' in mod.keys():
+                mod['factory']=self
             if type in d.keys():
                 m.append(d[type](**mod))
             else:
@@ -71,6 +73,10 @@ class Factory:
                     print(f'{type} not found!')
                     raise ValueError
         return nn.Sequential(*m)
+    def __getitem__(self, item):
+        return self.factory_dict[item]
+    def __len__(self):
+        return len(self.factory_dict)
     def __add__(self, other):
         f=Factory()
         f.register_dict(self.factory_dict)
@@ -88,6 +94,7 @@ class DefaultNNFactory(Factory):
         self.register_dict({
             'fc':FCBlock_v2,
             'conv':ConvBaseBlock,
+            'single_conv':ConvLayer,
             'cbam':CBAMBlock,
             'bam':BAMBlock,
             'se':SEBlock,
@@ -96,6 +103,9 @@ class DefaultNNFactory(Factory):
             'anode':ODEBlock,
             'cat':Cat,
             'view':View,
+            'act':ActivationLayer,
+            'chain':ChainLayer,
+            'empty':EmptyLayer,
         })
 
 from torchvision import models
@@ -146,15 +156,29 @@ def parse_model(fnames,factory,params=None):
             if typename in factory.keys():
                 model = factory[typename].create(module_dict)
             else:
-                raise ValueError
+                raise ValueError(f'Unable to create {typename}. Module NOT Found!')
             models.append(model)
     return models
+
+class Sequential(nn.Module):
+    def __init__(self,m):
+        super(Sequential,self).__init__()
+        r=[]
+        for mm in m:
+            if isinstance(mm,list):
+                r.append(Sequential(mm))
+            else:
+                r.append(mm)
+        self.main=nn.Sequential(*m)
+    def forward(self,*args,**kwargs):
+        return self.main(*args,**kwargs)
+
 
 class CascadedModels(nn.Module):
     def __init__(self,fnames,factory,params=None):
         super(CascadedModels,self).__init__()
         dis=parse_model(fnames,factory,params)
-        self.main=nn.Sequential(*dis)
+        self.main=Sequential(dis)
     def forward(self,x):
         y=self.main(x)
         return y

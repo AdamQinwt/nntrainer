@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 from ..convbase import ResConvLayers
 
+
 class DownSample(nn.Module):
     def __init__(self,nchannels,nconv=1,pool=2):
         super(DownSample,self).__init__()
@@ -37,6 +38,10 @@ class UpSampleB(nn.Module):
         return self.conv(x*skip)
 
 class ResAttBlock(nn.Module):
+    '''
+        Residual attention layer.
+        Possible args include: nchannels(*),orig_size(*),nfold,bottom_nconv,trunk_nconv
+        '''
     def __init__(self,nchannels,orig_size,nfold=2,bottom_nconv=2,trunk_nconv=1,*args,**kwargs):
         super(ResAttBlock,self).__init__()
         downsample=[]

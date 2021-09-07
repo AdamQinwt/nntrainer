@@ -1,0 +1,25 @@
+type: resnet
+modules:
+  - type: ConvLayer
+    in_channels:  3
+    out_channels:  64
+    ks: 7
+    stride: 2
+  - type: MaxPool2d
+    kernel_size:  3
+    stride:  2
+    padding:  1
+  - type: ResNetBlock_small_pre
+    nchannel: 64
+  - type: ResNetBlock_small_pre
+    nchannel: 64
+  - type: chain
+    fetch_factory:  true
+    block_type: ResNetBlock_small
+    chain_args:
+      - name: [in_channel,out_channel]
+        value:  [64,128,256,512]
+    itm_args:
+      - a:  []
+    common_args:
+      name: resnet

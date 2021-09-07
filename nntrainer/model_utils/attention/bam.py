@@ -27,7 +27,7 @@ class ChannelGate(nn.Module):
 
 
 class SpatialGate(nn.Module):
-    def __init__(self, gate_channel, reduction_ratio=16, dilation_conv_num=2, dilation_val=4,*args,**kwargs):
+    def __init__(self, gate_channel, reduction_ratio=16, dilation_conv_num=2, *args,**kwargs):
         super(SpatialGate, self).__init__()
         gate_channels=[gate_channel]+[gate_channel//reduction_ratio]*dilation_conv_num
         self.main=nn.Sequential(
@@ -51,6 +51,11 @@ class Gate(nn.Module):
 
 class BAMBlock(nn.Module):
     def __init__(self, *args,**kwargs):
+        '''
+        BAM. Possible args include: activation,gate_channel(*),reduction_ratio,dilation_conv_num,num_layers
+        :param args:
+        :param kwargs:
+        '''
         super(BAMBlock, self).__init__()
         self.att=Gate(*args,**kwargs)
     def forward(self,x):

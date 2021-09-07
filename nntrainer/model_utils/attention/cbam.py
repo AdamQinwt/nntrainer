@@ -63,7 +63,7 @@ class SpatialGate(nn.Module):
         super(SpatialGate, self).__init__()
         self.main=nn.Sequential(
             ChannelPool(),
-            ConvBaseBlock(2,1,-1,'sigmoid',bn_track=True),
+            ConvBaseBlock([2,1],7,-1,'sigmoid',bn_track=True),
         )
     def forward(self, x):
         return self.main(x)
@@ -81,6 +81,9 @@ class Gate(nn.Module):
         return att
 
 class CBAMBlock(nn.Module):
+    '''
+    CBAM. Possible args include: activation,gate_channel(*),dim
+    '''
     def __init__(self, *args,**kwargs):
         super(CBAMBlock, self).__init__()
         self.att=Gate(*args,**kwargs)

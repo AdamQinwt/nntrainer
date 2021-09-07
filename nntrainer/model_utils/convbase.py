@@ -1,9 +1,9 @@
 import torch.nn as nn
 import torch
-from .trivial import UnitLayer
+from .trivial import UnitLayer,ActivationLayer
 
 class ConvBaseBlock(nn.Module):
-    def __init__(self,nchannels,ks,pool=2,activate=None,bn=True,bn_track=False,*args,**kwargs):
+    def __init__(self,nchannels,ks,pool=2,activate=None,bn=True,bn_track=True,*args,**kwargs):
         super(ConvBaseBlock,self).__init__()
         layers=[]
         num_layers=len(nchannels)-1
@@ -14,7 +14,7 @@ class ConvBaseBlock(nn.Module):
         for i in range(num_layers):
             a=activate[i] if activate else None
             layers.append(nn.Conv2d(
-                nchannels[i],nchannels[i+1],ks[i],padding=ks[i]>>1
+                nchannels[i],nchannels[i+1],ks[i],padding=ks[i]>>1,bias=not bn
             ))
             if bn:
                 layers.append(nn.BatchNorm2d(nchannels[i+1],track_running_stats=bn_track))
@@ -37,7 +37,7 @@ class ConvBaseBlock(nn.Module):
         return y
 
 class ResConvBaseBlock(nn.Module):
-    def __init__(self,inchannel,reschannel,nlayer,ks,pool=2,activate=None,bn=True,bn_track=False,*args,**kwargs):
+    def __init__(self,inchannel,reschannel,nlayer,ks,pool=2,activate=None,bn=True,bn_track=True,*args,**kwargs):
         super(ResConvBaseBlock,self).__init__()
         layers=[]
         if not isinstance(ks,list):
@@ -52,7 +52,7 @@ class ResConvBaseBlock(nn.Module):
         for i in range(num_layers):
             a = activate[i] if activate else None
             layers.append(nn.Conv2d(
-                reschannel,reschannel,ks[i+offset],padding=ks[i+offset]>>1
+                reschannel,reschannel,ks[i+offset],padding=ks[i+offset]>>1,bias=not bn
             ))
             if bn:
                 layers.append(nn.BatchNorm2d(reschannel,track_running_stats=bn_track))
@@ -80,14 +80,14 @@ class ResConvBaseBlock(nn.Module):
         return y
 
 class ConvLayer(UnitLayer):
-    def __init__(self,in_channels,out_channels=None,ks=3,stride=1,bn=True,bn_track=True):
+    def __init__(self,in_channels,out_channels=None,ks=3,stride=1,activation='relu',bn=True,bn_track=True):
         super(ConvLayer,self).__init__()
         if not out_channels:
             out_channels=in_channels
         layers=[nn.Conv2d(in_channels,out_channels,ks,stride,ks>>1,bias=not bn)]
         if bn:
             layers.append(nn.BatchNorm2d(out_channels,track_running_stats=bn_track))
-        layers.append(nn.ReLU(inplace=True))
+        layers.append(ActivationLayer(activation))
         self.main=nn.Sequential(*layers)
 
 class ResConvLayer(nn.Module):
