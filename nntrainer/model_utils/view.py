@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 class View(nn.Module):
-    def __init__(self, shape):
+    def __init__(self, shape,*args,**kwargs):
         super(View, self).__init__()
         self.shape=shape
 
@@ -17,11 +17,11 @@ class View(nn.Module):
         return x.view(*shape)
 
 class Flatten(View):
-    def __init__(self):
+    def __init__(self,*args,**kwargs):
         super(Flatten, self).__init__([-2,-1])
 
 class Cat(nn.Module):
-    def __init__(self, dim=-1):
+    def __init__(self, dim=-1,*args,**kwargs):
         super(Cat, self).__init__()
         self.dim=dim
 

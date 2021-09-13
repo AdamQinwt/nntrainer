@@ -31,6 +31,8 @@ class AMGroup:
         :return: new average value
         '''
         return self.am[other[2]]+(other[0],other[1])
+    def __getitem__(self, item):
+        return self.am[item]
     def __len__(self):
         return len(self.am)
     def t(self):

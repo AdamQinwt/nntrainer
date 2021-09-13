@@ -5,9 +5,9 @@ from copy import deepcopy
 from nntrainer.model_utils.fc import FCBlock_v2
 from nntrainer.model_utils.convbase import ConvBaseBlock,ResConvBaseBlock,ConvLayer
 from nntrainer.model_utils.anode.ode_block import ODEBlock
-from nntrainer.model_utils.view import Cat,View
-from nntrainer.model_utils.trivial import UnitLayer,EmptyLayer,ChainLayer,ActivationLayer
-from nntrainer.model_utils.attention import CBAMBlock,BAMBlock,SEBlock,ResAttBlock
+from nntrainer.model_utils.view import Cat,View,Flatten
+from nntrainer.model_utils.trivial import UnitLayer,EmptyLayer,ChainBlock,ActivationLayer
+from nntrainer.model_utils.attention import CBAMBlock,BAMBlock,SELayer,ResAttBlock
 def str_replacer(s,params):
     if '$' in s:
         keys = []
@@ -60,17 +60,18 @@ class Factory:
         m = []
         d=self.factory_dict
         for mod in modules:
-            type=mod['type']
+            print(mod)
+            typenamr=mod['type']
             del mod['type']
             if 'fetch_factory' in mod.keys():
                 mod['factory']=self
-            if type in d.keys():
-                m.append(d[type](**mod))
+            if typenamr in d.keys():
+                m.append(d[typenamr](**mod))
             else:
                 try:
-                    m.append(eval(f'nn.{type}')(**mod))
+                    m.append(eval(f'nn.{typenamr}')(**mod))
                 except:
-                    print(f'{type} not found!')
+                    print(f'{typenamr} not found!')
                     raise ValueError
         return nn.Sequential(*m)
     def __getitem__(self, item):
@@ -97,14 +98,15 @@ class DefaultNNFactory(Factory):
             'single_conv':ConvLayer,
             'cbam':CBAMBlock,
             'bam':BAMBlock,
-            'se':SEBlock,
+            'se':SELayer,
             'res_att':ResAttBlock,
             'classic_image_fmfc':FixedOutputClassicImageModel,
             'anode':ODEBlock,
             'cat':Cat,
             'view':View,
+            'flatten':Flatten,
             'act':ActivationLayer,
-            'chain':ChainLayer,
+            'chain':ChainBlock,
             'empty':EmptyLayer,
         })
 

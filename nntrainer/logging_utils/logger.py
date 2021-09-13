@@ -28,7 +28,7 @@ def create_logger(output_dir,unique_name,need_tb=True,need_timestamp=True):
         log_file = '{}.log'.format(unique_name)
     final_log_file = final_output_dir / log_file
     head = '%(asctime)-15s %(message)s'
-    logging.basicConfig(filename=str(final_log_file), format=head)
+    logging.basicConfig(filename=str(final_log_file), format=head,filemode='w')
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     console = logging.StreamHandler()
@@ -36,7 +36,7 @@ def create_logger(output_dir,unique_name,need_tb=True,need_timestamp=True):
 
     summary_writer=None
     if need_tb:
-        tensorboard_log_dir = Path(root_output_dir) / (unique_name + "_" + time_str)
+        tensorboard_log_dir = Path(root_output_dir) / (unique_name + "_" + time_str) if need_timestamp else Path(root_output_dir) / (unique_name)
         print(f"=> creating {tensorboard_log_dir}")
         tensorboard_log_dir.mkdir(parents=True, exist_ok=True)
         summary_writer = SummaryWriter(log_dir=str(tensorboard_log_dir))

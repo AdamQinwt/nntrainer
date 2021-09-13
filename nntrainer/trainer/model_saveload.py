@@ -23,6 +23,7 @@ def add_state_dict_prefix(state_dict,prefix='module.'):
     return new_sd
 
 def load(model,path,remove_prefix=None,add_prefix=None):
+    if path is None or path=='': return
     state_dict = torch.load(path)
     if remove_prefix is not None:
         state_dict = remove_state_dict_prefix(state_dict,remove_prefix)
