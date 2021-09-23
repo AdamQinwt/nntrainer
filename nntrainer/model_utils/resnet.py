@@ -36,24 +36,80 @@ class ResNetBlock_small_pre(nn.Module):
         y=self.main(x)
         return x+y
 
+class ResNetBlock_big(nn.Module):
+    '''
+    Basic block for resnet-34
+    '''
+    def __init__(self,in_channel,out_channel,nout=1,*args,**kwargs):
+        super(ResNetBlock_big,self).__init__()
+        self.downsample=nn.Sequential(
+            ConvLayer(in_channel,out_channel,stride=(2,2),ks=3),
+            ConvLayer(out_channel,out_channel),
+        )
+        self.side=nn.Sequential(
+            nn.Conv2d(in_channel, out_channel, kernel_size=(1, 1), stride=(2, 2), bias=False),
+            nn.BatchNorm2d(out_channel)
+        )
+        self.out=nn.Sequential(*[ResNetBlock_small_pre(out_channel) for i in range(nout)])
+
+    def forward(self,x):
+        y1=self.downsample(x)+self.side(x)
+        y2=self.out(y1)
+        return y1+y2
+
+class ResNetBlock_large_bottleneck_downsample(nn.Module):
+    '''
+    Basic block for resnet-50
+    '''
+    def __init__(self,in_channel,mid_channel,out_channel,*args,**kwargs):
+        super(ResNetBlock_large_bottleneck_downsample,self).__init__()
+        self.downsample=nn.Sequential(
+            ConvLayer(in_channel,mid_channel,ks=1),
+            ConvLayer(mid_channel,mid_channel,stride=(2,2),ks=3),
+            ConvLayer(mid_channel, out_channel, ks=1,activation='none'),
+        )
+        self.side=nn.Sequential(
+            nn.Conv2d(in_channel, out_channel, kernel_size=(1, 1), stride=(2, 2), bias=False),
+            nn.BatchNorm2d(out_channel)
+        )
+        self.act=nn.ReLU(inplace=True)
+
+    def forward(self,x):
+        y1=self.downsample(x)+self.side(x)
+        y2=self.act(y1)
+        return y1+y2
+
+class ResNetBlock_large_bottleneck(nn.Module):
+    '''
+    Basic block for resnet-50
+    '''
+    def __init__(self,in_channel,mid_channel,out_channel,*args,**kwargs):
+        super(ResNetBlock_large_bottleneck,self).__init__()
+        self.main=nn.Sequential(
+            ConvLayer(in_channel,mid_channel,ks=1),
+            ConvLayer(mid_channel,mid_channel,stride=1,ks=3),
+            ConvLayer(mid_channel, out_channel, ks=1,activation='none'),
+        )
+        self.act=nn.ReLU(inplace=True)
+
+    def forward(self,x):
+        y1=self.main(x)+x
+        y2=self.act(y1)
+        return y1+y2
+
 class ResNetBlock_large(nn.Module):
     '''
     Basic block for resnet-50
     '''
-    def __init__(self,in_channel,out_channel,*args,**kwargs):
+    def __init__(self,in_channel,mid_channel,out_channel,nout,*args,**kwargs):
         super(ResNetBlock_large,self).__init__()
-        self.downsample=nn.Sequential(
-            ConvLayer(in_channel,in_channel,stride=(2,2),ks=(1,1)),
-            ConvLayer(in_channel,in_channel),
-            ConvLayer(in_channel, out_channel, stride=(2, 2), ks=(1, 1),activation='none'),
+        self.downsample=ResNetBlock_large_bottleneck_downsample(in_channel,mid_channel,out_channel)
+        self.out=nn.Sequential(
+            *[ResNetBlock_large_bottleneck(out_channel,mid_channel,out_channel) for i in range(nout)]
         )
-        self.side=nn.Sequential(
-            ConvLayer(in_channel,out_channel,stride=(2,2),ks=(1,1))
-        )
-        self.out=ConvBaseBlock([out_channel,in_channel,in_channel,out_channel],ks=[1,3,1],pool=-1,activate=['relu','relu','none'])
 
     def forward(self,x):
-        y1=self.downsample(x)+self.side(x)
+        y1=self.downsample(x)
         y2=self.out(y1)
         return y1+y2
 
@@ -63,5 +119,6 @@ class ResNetFactory(Factory):
         self.register_dict({
             'resnet_small':ResNetBlock_small,
             'resnet_small_pre':ResNetBlock_small_pre,
+            'resnet_big':ResNetBlock_big,
             'resnet_large':ResNetBlock_large,
         })

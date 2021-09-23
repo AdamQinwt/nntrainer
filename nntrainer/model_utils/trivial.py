@@ -70,9 +70,9 @@ class ChainLayer(UnitLayer):
                 value1,value2=a['value'][i],a['value'][i+1]
                 chain_arg[name1]=value1
                 chain_arg[name2]=value2
-            layers.append(block(**chain_arg,**itm_args[i],**common_args))
+            layers.append(block(**chain_arg,**itm_args[i],**common_args,**kwargs))
         self.main=nn.Sequential(*layers)
 
 class ChainBlock(ChainLayer):
     def __init__(self,factory,block_type,*args,**kwargs):
-        super(ChainBlock,self).__init__(factory[block_type],*args,**kwargs)
+        super(ChainBlock,self).__init__(factory[block_type],factory=factory,*args,**kwargs)

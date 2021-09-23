@@ -5,7 +5,7 @@ from copy import deepcopy
 from nntrainer.model_utils.fc import FCBlock_v2
 from nntrainer.model_utils.convbase import ConvBaseBlock,ResConvBaseBlock,ConvLayer
 from nntrainer.model_utils.anode.ode_block import ODEBlock
-from nntrainer.model_utils.view import Cat,View,Flatten
+from nntrainer.model_utils.view import Cat,View,Flatten,Squeeze
 from nntrainer.model_utils.trivial import UnitLayer,EmptyLayer,ChainBlock,ActivationLayer
 from nntrainer.model_utils.attention import CBAMBlock,BAMBlock,SELayer,ResAttBlock
 def str_replacer(s,params):
@@ -60,12 +60,12 @@ class Factory:
         m = []
         d=self.factory_dict
         for mod in modules:
-            print(mod)
             typenamr=mod['type']
             del mod['type']
             if 'fetch_factory' in mod.keys():
                 mod['factory']=self
             if typenamr in d.keys():
+                # print(typenamr,mod)
                 m.append(d[typenamr](**mod))
             else:
                 try:
@@ -104,6 +104,7 @@ class DefaultNNFactory(Factory):
             'anode':ODEBlock,
             'cat':Cat,
             'view':View,
+            'squeeze':Squeeze,
             'flatten':Flatten,
             'act':ActivationLayer,
             'chain':ChainBlock,
