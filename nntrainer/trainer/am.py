@@ -42,3 +42,10 @@ class AMGroup:
         '''
         for k, v in self.am.items():
             yield k,v
+    def t_avg(self):
+        '''
+        Traverse
+        :return: k,vs
+        '''
+        for k, v in self.am.items():
+            yield k,v.avg
