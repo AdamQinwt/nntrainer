@@ -22,13 +22,27 @@ class UnitLayer(nn.Module):
     def forward(self,*args,**kwargs):
         return self.main(*args,**kwargs)
 
+class AggressiveLayer(nn.Module):
+    def __init__(self,aggresive=1.0,*args,**kwargs):
+        super(AggressiveLayer,self).__init__()
+        self.agg=aggresive
+    def forward(self,x):
+        return x*self.agg
+
 class ActivationLayer(UnitLayer):
     '''
     activation layer from name
     '''
     def __init__(self,act,*args,**kwargs):
         super(ActivationLayer,self).__init__()
-        act_dict={'none':EmptyLayer,'sigmoid':nn.Sigmoid,'relu':nn.ReLU,'tanh':nn.Tanh,'lrelu':nn.LeakyReLU}
+        act_dict={
+            'none':EmptyLayer,
+            'sigmoid':nn.Sigmoid,
+            'softmax':nn.Softmax,
+            'relu':nn.ReLU,
+            'tanh':nn.Tanh,
+            'lrelu':nn.LeakyReLU
+            }
         if 'no_arg' in kwargs.keys():
             if act in act_dict.keys():
                 self.main = act_dict[act]()
