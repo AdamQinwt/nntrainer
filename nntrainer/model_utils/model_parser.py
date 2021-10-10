@@ -8,6 +8,9 @@ from nntrainer.model_utils.anode.ode_block import ODEBlock
 from nntrainer.model_utils.view import Cat,View,Flatten,Squeeze
 from nntrainer.model_utils.trivial import UnitLayer,EmptyLayer,ChainBlock,ActivationLayer
 from nntrainer.model_utils.attention import CBAMBlock,BAMBlock,SELayer,ResAttBlock
+
+from nntrainer.model_utils.quad_fc import QuadFCLayer
+from nntrainer.model_utils.quad_conv import ChannelQuadLayer
 def str_replacer(s,params):
     if '$' in s:
         keys = []
@@ -95,6 +98,8 @@ class DefaultNNFactory(Factory):
         self.register_dict({
             'fc':FCBlock_v2,
             'conv':ConvBaseBlock,
+            'quad_fc':QuadFCLayer,
+            'quad_conv_channel':ChannelQuadLayer,
             'single_conv':ConvLayer,
             'cbam':CBAMBlock,
             'bam':BAMBlock,
