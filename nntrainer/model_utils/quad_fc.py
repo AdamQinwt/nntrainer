@@ -53,7 +53,7 @@ class NonIdenticalQuadLayer(nn.Module):
         return out
 
 class QuadFCLayer(UnitLayer):
-    def __init__(self, in_n1,in_n2=None,is_identical=True,out_n=1,bn=True,bn_track=True,activate='relu',dropout=0.0,activation_args=None,bias=False,*args,**kwargs):
+    def __init__(self, in_n1,in_n2=None,is_identical=True,out_n=1,bn=True,bn_track=True,activate='none',dropout=0.0,activation_args=None,bias=False,*args,**kwargs):
         super(QuadFCLayer, self).__init__()
         if activation_args is None: activation_args={}
         if in_n2 is None:
