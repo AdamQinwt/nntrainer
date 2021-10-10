@@ -1,3 +1,4 @@
+from nntrainer.model_utils.trivial import UnitLayer
 import torch
 import torch.nn as nn
 
@@ -16,13 +17,13 @@ def calcNewLength(s,padding,kernel_size,stride=1):
     return ((s + 2 * padding - kernel_size )// stride) + 1
 
 class ChannelQuadLayer(nn.Module):
-    def __init__(self,in_channel,out_channel):
+    def __init__(self,in_channels,out_channels):
         super(ChannelQuadLayer,self).__init__()
-        n_fc_in=in_channel*(in_channel+3)
+        n_fc_in=in_channels*(in_channels+3)
         n_fc_in>>=1
-        self.idx=get_square_indices(in_channel)
+        self.idx=get_square_indices(in_channels)
         self.actual_channel=n_fc_in
-        self.fc=nn.Conv2d(n_fc_in,out_channel,1,bias=False)
+        self.fc=nn.Conv2d(n_fc_in,out_channels,1,bias=False)
     def forward(self,x):
         bs,chn,width,height=x.size()
         area=width*height
@@ -35,8 +36,21 @@ class ChannelQuadLayer(nn.Module):
         out=self.fc(y)
         return out
 
+class IntegratedChannelQuadLayer(UnitLayer):
+    def __init__(self,in_channels,mid_channels,out_channels,stride=1,kernel_size=3,padding=None,bias=False,dilation=1,*args,**kwargs):
+        super(IntegratedChannelQuadLayer,self).__init__()
+        conv=nn.Conv2d(
+            in_channels,mid_channels,
+            kernel_size=kernel_size,stride=stride,
+            padding=padding if padding else kernel_size>>1,
+            bias=bias,dilation=dilation
+        )
+        channel_qconv=ChannelQuadLayer(mid_channels,out_channels)
+        self.main=nn.Sequential(conv,channel_qconv)
+
+
 class SpatialQuadLayer(nn.Module):
-    def __init__(self,n_channel,ks=3,stride=1,padding=None,chn_share_weight=False,chn_expand=1):
+    def __init__(self,n_channels,ks=3,stride=1,padding=None,chn_share_weight=False,chn_expand=1):
         super(SpatialQuadLayer,self).__init__()
         qlen=ks*ks
         n_fc_in=qlen*(qlen+3)
@@ -50,7 +64,7 @@ class SpatialQuadLayer(nn.Module):
         self.padding=padding
         self.unfold=nn.Unfold(kernel_size=ks,dilation=1,padding=padding,stride=stride)
         self.ks=ks
-        self.out_chn=n_channel*chn_expand
+        self.out_chn=n_channels*chn_expand
     def forward(self,x):
         bs,chn,width,height=x.size()
         area=width*height
