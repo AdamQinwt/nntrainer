@@ -2,7 +2,7 @@ from distutils.core import setup
 # from setuptools import setup, find_packages
 setup(
     name='nntrainer',
-    version='0.2',
+    version='0.2.1',
 
     py_modules=['nntrainer.trainer.trainer_advanced','nntrainer.trainer.train','nntrainer.trainer.valid','nntrainer.trainer.predict',
                 'nntrainer.trainer.am','nntrainer.trainer.model_saveload','nntrainer.trainer.max_min_stat','nntrainer.trainer.optimizer',

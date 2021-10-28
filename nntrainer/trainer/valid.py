@@ -16,3 +16,12 @@ def accuracy(output, target, topk=(1,)):
         correct_k = correct[:k].reshape(-1).float().sum(0)
         res.append(correct_k.mul_(1.0 / batch_size))
     return res
+
+from random import randint
+
+def random_select(x,p=5):
+    p=p*100
+    for itm in x:
+        if randint(0,100)<p:
+            return itm
+    return itm[0]
