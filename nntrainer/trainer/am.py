@@ -49,6 +49,9 @@ class AMGroup:
         '''
         for k, v in self.am.items():
             yield k,v.avg
+    def to_tb(self,writer,step):
+        for k,avg in self.t_avg():
+            writer.add_scalar(k,avg,step)
 
 from terminaltables import AsciiTable
 
@@ -80,8 +83,11 @@ class AMGrid:
         :return: new average value
         '''
         return self.am[other[2],other[3]]+(other[0],other[1])
-    def __getitem__(self, item):
-        return self.am[tuple(item)]
+    def __getitem__(self, *args):
+        if len(args)==1:
+            return self.am[tuple(args[0])]
+        else:
+            return self.am[(args[0],args[1])]
     def __len__(self):
         return self.active_cnt
     def deactivate(self,*args):
@@ -103,7 +109,7 @@ class AMGrid:
         '''
         for k, v in self.am.items():
             if self.active_mask[k]:
-                yield f'{k[1]}-{k[0]}',v
+                yield f'{k[1]}_{k[0]}',v
     def t_avg(self):
         '''
         Traverse
@@ -111,18 +117,21 @@ class AMGrid:
         '''
         for k, v in self.am.items():
             if self.active_mask[k]:
-                yield f'{k[1]}-{k[0]}',v.avg
+                yield f'{k[1]}_{k[0]}',v.avg
     def __str__(self):
         table=[['']+self.cols]
         for r in self.rows:
             entry=[r]
             for c in self.cols:
                 if self.active_mask[(r,c)]:
-                    entry+=f'{[self[r,c].avg]}'
+                    entry+=[f'{self[r,c].avg}']
                 else:
-                    entry+='-'
+                    entry+=['-']
             table.append(entry)
         return AsciiTable(table).table
+    def to_tb(self,writer,step):
+        for k,avg in self.t_avg():
+            writer.add_scalar(k,avg,step)
 
 
 class AMGridClassification(AMGrid):
@@ -141,3 +150,9 @@ class AMGridRegression(AMGrid):
         rows=['loss']
         cols=['train','valid']
         super(AMGridRegression,self).__init__(rows,cols)
+
+class AMGridGAN(AMGrid):
+    def __init__(self):
+        cols=['train','valid']
+        rows=['loss','gen_loss','dis_loss','discriminator_loss']
+        super(AMGridGAN,self).__init__(rows, cols)

@@ -1,14 +1,6 @@
 import torch
 import torch.nn as nn
 
-
-class CE(nn.Module):
-    def __init__(self):
-        super(CE, self).__init__()
-
-    def forward(self, pred,ans):
-        return 0
-
 class RMSE(nn.Module):
     def __init__(self):
         super(RMSE, self).__init__()
@@ -17,6 +9,20 @@ class RMSE(nn.Module):
         diff=pred-ans
         diff=diff.pow(2).mean()
         return diff
+
+class RMSEFromX(RMSE):
+    def __init__(self,x):
+        super(RMSEFromX,self).__init__()
+        self.x=x
+    def forward(self,y):
+        return super(RMSEFromX,self).forward(y,self.x)
+
+class RMSEFrom0(RMSEFromX):
+    def __init__(self):
+        super(RMSEFrom0,self).__init__(0)
+class RMSEFrom1(RMSEFromX):
+    def __init__(self):
+        super(RMSEFrom1,self).__init__(1)
 
 class SupervisedClusterLoss(nn.Module):
     '''

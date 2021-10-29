@@ -19,9 +19,40 @@ def accuracy(output, target, topk=(1,)):
 
 from random import randint
 
-def random_select(x,p=5):
+def random_select(x,p=.5):
     p=p*100
     for itm in x:
         if randint(0,100)<p:
             return itm
-    return itm[0]
+    return itm
+import matplotlib
+matplotlib.use('agg')
+
+import matplotlib.pyplot as plt
+from imageio import imread
+import numpy as np
+import torch
+
+def plot_vis_img(buf):
+    plt.savefig(buf,format='png')
+    buf.seek(0)
+    im=imread(buf)
+    buf.seek(0)
+    return torch.from_numpy(im).type(torch.float32).permute(2,0,1)/255
+
+def plot_gray(images,buf,titles=None):
+    cols=len(images)
+    rows=1
+    fig=plt.figure(figsize=(cols<<2,4))
+    plt.subplots_adjust(wspace=.05,hspace=.05)
+    for idx in range(cols):
+        ax=fig.add_subplot(rows,cols,idx+1)
+        if titles:
+            ax.imshow(images[idx],cmap='gray')
+            ax.set_title(titles[idx])
+            ax.get_xaxis().set_visible(False)
+            ax.get_yaxis().set_visible(False)
+            ax.set_axis_off()
+    im=plot_vis_img(buf)
+    plt.close()
+    return im
