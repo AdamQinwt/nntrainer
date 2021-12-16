@@ -48,11 +48,28 @@ def plot_gray(images,buf,titles=None):
     for idx in range(cols):
         ax=fig.add_subplot(rows,cols,idx+1)
         if titles:
-            ax.imshow(images[idx],cmap='gray')
             ax.set_title(titles[idx])
-            ax.get_xaxis().set_visible(False)
-            ax.get_yaxis().set_visible(False)
-            ax.set_axis_off()
+        ax.imshow(images[idx],cmap='gray')
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+        ax.set_axis_off()
+    im=plot_vis_img(buf)
+    plt.close()
+    return im
+
+def plot_rgb(images,buf,titles=None):
+    cols=len(images)
+    rows=1
+    fig=plt.figure(figsize=(cols<<2,4))
+    plt.subplots_adjust(wspace=.05,hspace=.05)
+    for idx in range(cols):
+        ax=fig.add_subplot(rows,cols,idx+1)
+        if titles:
+            ax.set_title(titles[idx])
+        ax.imshow((images[idx]/255.0).transpose(0,1).transpose(1,2))
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+        ax.set_axis_off()
     im=plot_vis_img(buf)
     plt.close()
     return im

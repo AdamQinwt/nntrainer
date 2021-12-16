@@ -4,16 +4,19 @@ import time
 import logging
 from pathlib import Path
 
-def create_logger(output_dir,unique_name,need_tb=True,need_timestamp=True):
+def create_logger(output_dir,unique_name,need_tb=True,need_timestamp=True,extra_mid_dir=None):
     '''
     create loggers
     :param output_dir: root of the output path
     :param unique_name: name
     :param need_tb: whether tensorboard is needed
     :param need_timestamp: whether timestamp is needed
+    :param extra_mid_dir: extra path in the middle
     :return: logger,log dir,summary writer
     '''
     root_output_dir = Path(output_dir)
+    if extra_mid_dir:
+        root_output_dir=root_output_dir/extra_mid_dir
     if not root_output_dir.exists():
         print(f'=> creating {root_output_dir}')
     unique_name = osp.basename(unique_name).split('.')[0]

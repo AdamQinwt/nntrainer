@@ -1,28 +1,67 @@
 import torch
 import torch.nn as nn
 
-class RMSE(nn.Module):
+class MSE(nn.Module):
     def __init__(self):
-        super(RMSE, self).__init__()
+        super(MSE, self).__init__()
 
     def forward(self, pred,ans):
         diff=pred-ans
         diff=diff.pow(2).mean()
         return diff
 
-class RMSEFromX(RMSE):
+class MSEFromX(MSE):
     def __init__(self,x):
-        super(RMSEFromX,self).__init__()
+        super(MSEFromX,self).__init__()
         self.x=x
     def forward(self,y):
-        return super(RMSEFromX,self).forward(y,self.x)
+        return super(MSEFromX,self).forward(y,self.x)
 
-class RMSEFrom0(RMSEFromX):
+class MSEFrom0(MSEFromX):
     def __init__(self):
-        super(RMSEFrom0,self).__init__(0)
-class RMSEFrom1(RMSEFromX):
+        super(MSEFrom0,self).__init__(0)
+class MSEFrom1(MSEFromX):
     def __init__(self):
-        super(RMSEFrom1,self).__init__(1)
+        super(MSEFrom1,self).__init__(1)
+
+class PSNR(nn.Module):
+    def __init__(self):
+        super(PSNR,self).__init__()
+    def forward(self,img1, img2):
+        data_range=max(img1.max(),img2.max())
+        mse = torch.mean((img1 - img2) ** 2)
+        return 20 * torch.log10(data_range / torch.sqrt(mse))
+
+class WeightedSumLoss(nn.Module):
+    def __init__(self,loss_names,loss_weights,*args):
+        super(WeightedSumLoss,self).__init__()
+        names=[]
+        weights=[]
+        modules=[]
+        for i in range(len(loss_names)):
+            if loss_weights[i]==0: continue
+            names.append(loss_names[i])
+            weights.append(loss_weights[i])
+            modules.append(args[i])
+        self.loss_names=names
+        self.loss_weights=weights
+        self.loss_modules=modules
+    def forward(self,y,y_):
+        losses={}
+        totals=0
+        for idx,name in enumerate(self.loss_names):
+            tmp=self.loss_modules[idx](y,y_)
+            losses[name]=tmp
+            totals=totals+self.loss_weights[idx]*tmp
+        return losses,totals
+
+class CosineLoss(nn.Module):
+    def __init__(self):
+        super(CosineLoss,self).__init__()
+    def forward(self,y,label):
+        bs=y.size(0)
+        similarity=torch.cosine_similarity(y.view(bs,-1),label.view(bs,-1))
+        return (1-similarity).mean()
 
 class SupervisedClusterLoss(nn.Module):
     '''
