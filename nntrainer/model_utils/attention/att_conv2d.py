@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
-from nntrainer.model_utils.convbase import ConvLayer,ConvBaseBlock
-from nntrainer.model_utils.model_parser import Factory
-from nntrainer.model_utils.trivial import UnitLayer,EmptyLayer
+from ..convbase import ConvLayer,ConvBaseBlock
+from ..model_parser import Factory
+from ..trivial import UnitLayer,EmptyLayer
 
 from .squeeze_extraction import SELayer
 from .residual_attention import ResAttBlock
