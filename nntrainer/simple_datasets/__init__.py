@@ -5,3 +5,4 @@ from .random_generator import rand_uniform,rand_norm
 from .sequence import SequenceDataset
 from .sin import SinDataset
 from .xor import Xor
+from .grid_dataset import Grid2DDataset

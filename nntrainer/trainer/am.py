@@ -65,12 +65,14 @@ class AMGrid:
         self.active_cnt=0
         self.rows=rows
         self.cols=columns
-    def reset(self):
+    def reset_active(self):
         self.active_cnt=0
         for k, v in self.am.items():
-            v.reset()
             self.active_mask[k]=True
             self.active_cnt+=1
+    def reset(self):
+        for k, v in self.am.items():
+            v.reset()
     def update_active_cnt(self):
         self.active_cnt=0
         for k, v in self.am.items():
