@@ -32,6 +32,20 @@ class PSNR(nn.Module):
         mse = torch.mean((img1 - img2) ** 2)
         return 20 * torch.log10(data_range / torch.sqrt(mse))
 
+class FixedIDXFunc:
+    def __init__(self,func,idx):
+        self.func=func
+        self.idx=idx
+    def __call__(self,*args):
+        return self.func(*[args[idx] for idx in self.idx])
+
+class FixedKEYFunc:
+    def __init__(self,func,idx):
+        self.func=func
+        self.idx=idx
+    def __call__(self,**kwargs):
+        return self.func(**{idx:kwargs[idx] for idx in self.idx})
+
 class WeightedSumLoss(nn.Module):
     def __init__(self,loss_names,loss_weights,*args):
         super(WeightedSumLoss,self).__init__()
@@ -46,14 +60,19 @@ class WeightedSumLoss(nn.Module):
         self.loss_names=names
         self.loss_weights=weights
         self.loss_modules=modules
-    def forward(self,y,y_):
+    def forward(self,*args,**kwargs):
         losses={}
         totals=0
         for idx,name in enumerate(self.loss_names):
-            tmp=self.loss_modules[idx](y,y_)
+            tmp=self.loss_modules[idx](*args,**kwargs)
             losses[name]=tmp
             totals=totals+self.loss_weights[idx]*tmp
         return losses,totals
+    def update_amgrid(self,amg,column,loss,totals,name='loss',bs=1):
+        for k,v in loss.items():
+            l=amg+[v.detach().cpu().item(),bs,k,column]
+        l=amg+[totals.detach().cpu().item(),bs,name,column]
+        return l
 
 class CosineLoss(nn.Module):
     def __init__(self):

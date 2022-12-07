@@ -1,5 +1,5 @@
 from .fc import FCBlock_v2,FCLayer
-from .loss import MSE,MSEFrom0,MSEFrom1,MSEFromX,CosineLoss
+from .loss import MSE,MSEFrom0,MSEFrom1,MSEFromX,CosineLoss,FixedIDXFunc,FixedKEYFunc,WeightedSumLoss
 from .trivial import UnitLayer,EmptyLayer,ActivationLayer
 from .view import View,Squeeze,WindowPartition,WindowPartitionReverse,Flatten,window_partition,window_reverse
 from .weight_init import model_param_stat,trunc_normal,weights_init_normal,model_norm_stat
