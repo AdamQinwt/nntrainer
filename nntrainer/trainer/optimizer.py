@@ -62,3 +62,14 @@ def get_optimizer_sheduler(parameters,type_opt,type_sch,param_dict_optimizer,*ar
     except:
         raise ValueError
     return optimizer,scheduler
+
+def get_optimizer_sheduler_v2(parameters,type_opt,type_sch,param_dict_optimizer,param_dict_scheduler):
+    '''
+    get an optimzer and its scheduler
+    '''
+    try:
+        optimizer=get_optimizer(parameters,type_opt,param_dict_optimizer)
+        scheduler=get_scheduler(optimizer,type_sch,**param_dict_scheduler)
+    except:
+        raise ValueError
+    return optimizer,scheduler
