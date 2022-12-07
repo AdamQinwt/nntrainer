@@ -2,8 +2,9 @@ from distutils.core import setup
 # from setuptools import setup, find_packages
 setup(
     name='nntrainer',
-    version='0.4.0',
+    version='0.4.1',
     packages=[
+            'nntrainer',
             'nntrainer.model_utils',
             'nntrainer.model_utils.anode',
             'nntrainer.model_utils.attention',
