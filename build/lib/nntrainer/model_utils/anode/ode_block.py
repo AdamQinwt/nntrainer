@@ -1,4 +1,4 @@
-from . import odesolver_adjoint as odesolver
+from .adjoint import odesolver_adjoint as odesolver
 import torch.nn as nn
 
 class ODEBlock(nn.Module):

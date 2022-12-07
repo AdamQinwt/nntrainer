@@ -2,15 +2,15 @@ import torch
 import torch.nn as nn
 import yaml
 from copy import deepcopy
-from nntrainer.model_utils.fc import FCBlock_v2
-from nntrainer.model_utils.convbase import ConvBaseBlock,ResConvBaseBlock,ConvLayer
-from nntrainer.model_utils.anode.ode_block import ODEBlock
-from nntrainer.model_utils.view import Cat,View,Flatten,Squeeze
-from nntrainer.model_utils.trivial import UnitLayer,EmptyLayer,ChainBlock,ActivationLayer,AggressiveLayer
-from nntrainer.model_utils.attention import CBAMBlock,BAMBlock,SELayer,ResAttBlock
+from .fc import FCBlock_v2
+from .convbase import ConvBaseBlock,ResConvBaseBlock,ConvLayer
+from .anode.ode_block import ODEBlock
+from .view import Cat,View,Flatten,Squeeze
+from .trivial import UnitLayer,EmptyLayer,ChainBlock,ActivationLayer,AggressiveLayer
+# from .attention import CBAMBlock,BAMBlock,SELayer,ResAttBlock
 
-from nntrainer.model_utils.quad_fc import QuadFCLayer
-from nntrainer.model_utils.quad_conv import IntegratedChannelQuadLayer
+from .quad_fc import QuadFCLayer
+from .quad_conv import ChannelQuadLayer
 def str_replacer(s,params):
     if '$' in s:
         keys = []
@@ -99,12 +99,12 @@ class DefaultNNFactory(Factory):
             'fc':FCBlock_v2,
             'conv':ConvBaseBlock,
             'quad_fc':QuadFCLayer,
-            'quad_conv_channel':IntegratedChannelQuadLayer,
+            'quad_conv_channel':ChannelQuadLayer,
             'single_conv':ConvLayer,
-            'cbam':CBAMBlock,
+            ''''cbam':CBAMBlock,
             'bam':BAMBlock,
             'se':SELayer,
-            'res_att':ResAttBlock,
+            'res_att':ResAttBlock,'''
             'classic_image_fmfc':FixedOutputClassicImageModel,
             'anode':ODEBlock,
             'cat':Cat,
@@ -154,7 +154,7 @@ def parse_model(fnames,factory,params=None):
             models.append([parse_model(fname,factory,deepcopy(params))])
         else:
             with open(fname,'r') as f:
-                y=yaml.load(f)
+                y=yaml.load(f,Loader=yaml.BaseLoader)
             if 'params' in y.keys():
                 for k,v in y['params'].items():
                     params[k]=v

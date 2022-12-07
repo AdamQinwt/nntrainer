@@ -8,4 +8,3 @@ def load_yaml(fname,*args,**kwargs):
 def dump_yaml(data,fname,*args,**kwargs):
     with open(fname,'w') as fout:
         dump(data,fout,*args,**kwargs)
-    return res

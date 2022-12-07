@@ -154,7 +154,7 @@ def parse_model(fnames,factory,params=None):
             models.append([parse_model(fname,factory,deepcopy(params))])
         else:
             with open(fname,'r') as f:
-                y=yaml.load(f)
+                y=yaml.load(f,Loader=yaml.BaseLoader)
             if 'params' in y.keys():
                 for k,v in y['params'].items():
                     params[k]=v

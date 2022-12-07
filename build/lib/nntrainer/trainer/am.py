@@ -65,12 +65,14 @@ class AMGrid:
         self.active_cnt=0
         self.rows=rows
         self.cols=columns
-    def reset(self):
+    def reset_active(self):
         self.active_cnt=0
         for k, v in self.am.items():
-            v.reset()
             self.active_mask[k]=True
             self.active_cnt+=1
+    def reset(self):
+        for k, v in self.am.items():
+            v.reset()
     def update_active_cnt(self):
         self.active_cnt=0
         for k, v in self.am.items():
@@ -150,9 +152,11 @@ class AMGridRegression(AMGrid):
         rows=['loss']
         cols=['train','valid']
         super(AMGridRegression,self).__init__(rows,cols)
+        self.reset_active()
 
 class AMGridGAN(AMGrid):
     def __init__(self):
         cols=['train','valid']
         rows=['loss','gen_loss','dis_loss','discriminator_loss']
         super(AMGridGAN,self).__init__(rows, cols)
+        self.reset_active()

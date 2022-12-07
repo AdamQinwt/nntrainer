@@ -152,9 +152,11 @@ class AMGridRegression(AMGrid):
         rows=['loss']
         cols=['train','valid']
         super(AMGridRegression,self).__init__(rows,cols)
+        self.reset_active()
 
 class AMGridGAN(AMGrid):
     def __init__(self):
         cols=['train','valid']
         rows=['loss','gen_loss','dis_loss','discriminator_loss']
         super(AMGridGAN,self).__init__(rows, cols)
+        self.reset_active()

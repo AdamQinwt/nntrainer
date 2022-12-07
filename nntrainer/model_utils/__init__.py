@@ -14,3 +14,9 @@ from .attention import SELayer,ResAttBlock,ResNetAttentionBlock,ResNetAttentionB
 from .quad_fc import QuadFCLayer
 from .quad_conv import ChannelQuadLayer,calcNewLength
 from .patch_discriminator.patchdis import PatchSplitMerge,ClassicDisBlock
+
+default_factories={
+    'default':DefaultNNFactory(),
+    'attention':AttConv2dResNetFactory(),
+    'resnet':ResNetFactory(),
+}
