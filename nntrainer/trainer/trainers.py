@@ -39,6 +39,7 @@ class ModelGroup:
             if model_name not in donnot_load:
                 if args[model_name].pretrained is not None: load(m0,args[model_name].pretrained)
             m[model_name]=m0
+            self.__setattr__('model_name',m0)
         self.m=m
     def __getitem__(self,idx):
         return self.m[idx]
@@ -139,17 +140,18 @@ class Trainer:
         loss_func=self.loss_func
         am=self.am
         args=self.args
+        device=self.device
 
         for epoch in range(nepoch):
             for stage in self.stages:
-                before_iter(stage,opt,sch,models,args)
+                before_iter(stage,opt,sch,models,args,device)
                 tbar=tqdm.tqdm(self.data[stage],total=64,desc=f'Ep.{stage} {epoch}')
                 for idx, d in enumerate(tbar):
-                    start_iter(stage,opt,sch,models,args)
-                    outcomes,bs=forward_func(models,d)
+                    start_iter(stage,opt,sch,models,args,device)
+                    outcomes,bs=forward_func(models,d,device)
                     losses,total_losses=loss_func(outcomes,d,models)
                     total_losses.backward()
-                    end_iter(stage,d,opt,sch,models,args)
+                    end_iter(stage,d,opt,sch,models,args,device)
                     l=loss_func.update_amgrid(am,stage,losses,total_losses,bs=bs)
                     tbar.set_postfix({'loss':l})
                 after_iter(stage,opt,sch,models,args)
@@ -187,5 +189,5 @@ class CalcLoss:
         raise NotImplementedError
 
 class ForwardFunction:
-    def __call__(self,models,d):
+    def __call__(self,models,d,device):
         raise NotImplementedError
