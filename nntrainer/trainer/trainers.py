@@ -167,7 +167,7 @@ class StageFunc(DoNothing):
     def valid(self,*args,**kwargs):
         pass
     def __call__(self, stage,*args, **kwargs):
-        eval(f'self.{stage}')(*args,**kwargs)
+        return eval(f'self.{stage}')(*args,**kwargs)
 class PrepareStageNormal(StageFunc):
     def train(self, opt, sch, models,*args,**kwargs):
         models.train()
