@@ -81,7 +81,7 @@ class Trainer:
         if device is None: device=get_device()
         d={}
         for dk,dv in data.items():
-            if not isinstance(dv): dv=load_dataset(dv,**args.data[dk].loader)
+            if not isinstance(dv,DataLoader): dv=load_dataset(dv,**args.data[dk].loader)
             d[dk]=dv
         if models is not None:
             models=ModelGroup(
