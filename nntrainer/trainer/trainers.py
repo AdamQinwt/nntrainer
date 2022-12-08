@@ -148,11 +148,11 @@ class Trainer:
                 before_iter(stage,opt,sch,models,args,device)
                 tbar=tqdm.tqdm(self.data[stage],total=64,desc=f'Ep.{stage} {epoch}')
                 for idx, d in enumerate(tbar):
-                    start_iter(stage,opt,sch,models,args,device)
-                    outcomes,bs=forward_func(models,d,device)
-                    losses,total_losses=loss_func(outcomes,d,models,device)
+                    batch_data=start_iter(stage,d,opt,sch,models,args,device)
+                    outcomes,bs=forward_func(models,batch_data,device)
+                    losses,total_losses=loss_func(outcomes,batch_data,models,device)
                     total_losses.backward()
-                    end_iter(stage,d,opt,sch,models,args,device)
+                    end_iter(stage,batch_data,opt,sch,models,args,device)
                     l=loss_func.update_amgrid(am,stage,losses,total_losses,bs=bs)
                     tbar.set_postfix({'loss':l})
                 after_iter(stage,opt,sch,models,args)
@@ -174,10 +174,13 @@ class PrepareStageNormal(StageFunc):
     def valid(self, opt, sch, models,*args,**kwargs):
         models.valid()
 class StartIterNormal(StageFunc):
-    def train(self, opt, sch, models,*args,**kwargs):
+    def train(self, d,opt, sch, models,cfg,device,*args,**kwargs):
         for k,v in opt.items(): v.zero_grad()
+        return [dd.to(device) for dd in d]
+    def valid(self, d,opt, sch, models,cfg,device,*args,**kwargs):
+        return [dd.to(device) for dd in d]
 class EndIterNormal(StageFunc):
-    def train(self, opt, sch, models,*args,**kwargs):
+    def train(self, d,opt, sch, models,*args,**kwargs):
         for k,v in opt.items(): v.step()
 class AfterIterNormal(StageFunc):
     def train(self, opt, sch, models,*args,**kwargs):
