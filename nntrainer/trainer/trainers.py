@@ -64,12 +64,24 @@ class ModelGroup:
             opt[opt_k]=opt0
             sch[opt_k]=sch0
         return opt,sch
-    def train(self):
-        for k,v in self.m.items(): v.train()
-    def valid(self):
-        for k,v in self.m.items(): v.eval()
-    def save(self,root_dir):
-        for k,v in self.m.items(): save(v,f'{root_dir}/{k}.pth')
+    def train(self,need=None):
+        for k,v in self.m.items():
+            if need is not None:
+                if k not in need:
+                    continue
+            v.train()
+    def valid(self,need=None):
+        for k,v in self.m.items():
+            if need is not None:
+                if k not in need:
+                    continue
+            v.eval()
+    def save(self,root_dir,need_save=None):
+        for k,v in self.m.items(): 
+            if need_save is None:
+                save(v,f'{root_dir}/{k}.pth')
+            elif k in need_save:
+                save(v,f'{root_dir}/{k}.pth')
 
 class Trainer:
     def __init__(
@@ -169,24 +181,41 @@ class StageFunc(DoNothing):
     def __call__(self, stage,*args, **kwargs):
         return eval(f'self.{stage}')(*args,**kwargs)
 class PrepareStageNormal(StageFunc):
+    def __init__(self,need_tune=None):
+        self.need_tune=None
     def train(self, opt, sch, models,*args,**kwargs):
-        models.train()
+        models.train(self.need_tune)
     def valid(self, opt, sch, models,*args,**kwargs):
-        models.valid()
+        models.valid(self.need_tune)
 class StartIterNormal(StageFunc):
+    def __init__(self,need=None):
+        self.need=need
     def train(self, d,opt, sch, models,cfg,device,*args,**kwargs):
-        for k,v in opt.items(): v.zero_grad()
+        if self.need is None:
+            for k,v in opt.items(): v.zero_grad()
+        else:
+            for ne in self.need:
+                opt[ne].zero_grad()
         return [dd.to(device) for dd in d]
     def valid(self, d,opt, sch, models,cfg,device,*args,**kwargs):
         return [dd.to(device) for dd in d]
 class EndIterNormal(StageFunc):
+    def __init__(self,need=None):
+        self.need=need
     def train(self, d,opt, sch, models,*args,**kwargs):
-        for k,v in opt.items(): v.step()
+        if self.need is None:
+            for k,v in opt.items(): v.step()
+        else:
+            for ne in self.need:
+                opt[ne].step()
 class AfterIterNormal(StageFunc):
+    def __init__(self,need_save=None):
+        super(StageFunc,self).__init__()
+        self.need_save=need_save
     def train(self, opt, sch, models,*args,**kwargs):
         for k,v in sch.items(): v.step()
     def valid(self, opt, sch, models,config,*args,**kwargs):
-        models.save(config.root_dir)
+        models.save(config.root_dir,self.need_save)
 
 class CalcLoss:
     def __call__(self,outcomes,d,models):
