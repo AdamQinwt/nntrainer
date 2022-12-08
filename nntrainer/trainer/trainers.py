@@ -128,13 +128,13 @@ class Trainer:
         ):
 
         if before_iter is None: before_iter=DoNothing
-        elif before_iter=='normal': before_iter=PrepareStageNormal
+        elif before_iter=='normal': before_iter=PrepareStageNormal()
         if start_iter is None: start_iter=DoNothing
-        elif start_iter=='normal': start_iter=StartIterNormal
+        elif start_iter=='normal': start_iter=StartIterNormal()
         if end_iter is None: end_iter=DoNothing
-        elif end_iter=='normal': end_iter=EndIterNormal
+        elif end_iter=='normal': end_iter=EndIterNormal()
         if after_iter is None: after_iter=DoNothing
-        elif after_iter=='normal': after_iter=AfterIterNormal
+        elif after_iter=='normal': after_iter=AfterIterNormal()
         opt=self.opt
         sch=self.sch
         models=self.models
