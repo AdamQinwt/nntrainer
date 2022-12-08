@@ -50,7 +50,7 @@ class ModelGroup:
         for mn in model_names:
             for p in self[mn].parameters():
                 e_d_paramlist.append(p)
-        return p
+        return e_d_paramlist
     def create_optimizers(self,args):
         opt,sch={},{}
         for opt_k,opt_params in args.items():
