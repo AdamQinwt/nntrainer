@@ -7,7 +7,7 @@ from ..model_utils import CascadedModels,default_factories,WeightedSumLoss
 from .model_saveload import save,load
 from .optimizer import get_optimizer_sheduler_v2
 from .am import AMGrid
-from tqdm import tqdm
+import tqdm
 import os
 
 def dictcpy(src=None,dst=None):
