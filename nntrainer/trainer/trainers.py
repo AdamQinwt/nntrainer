@@ -82,10 +82,19 @@ class Trainer:
         for dk,dv in data.items():
             if not isinstance(dv): dv=load_dataset(dv,**args.data[dk].loader)
             d[dk]=dv
-        models=ModelGroup(
-            args,device,models,factory,global_model_params,model_params,donnot_load
-        )
-        opt,sch=models.create_optimizers(args.optimizers)
+        if models is not None:
+            models=ModelGroup(
+                args,device,models,factory,global_model_params,model_params,donnot_load
+            )
+            if 'optimizers' in args.keys():
+                opt,sch=models.create_optimizers(args.optimizers)
+            else:
+                opt=None
+                sch=None
+        else:
+            models=None
+            opt=None
+            sch=None
         if loss_names is None: loss_names=[]
         if loss_weights is None: loss_weights=[]
         loss_func=WeightedSumLoss(loss_names,loss_weights,*loss_funcs).to(device)
@@ -172,3 +181,11 @@ class AfterIterNormal(StageFunc):
         for k,v in sch.items(): v.step()
     def valid(self, opt, sch, models,config,*args,**kwargs):
         models.save(config.root_dir)
+
+class CalcLoss:
+    def __call__(self,outcomes,d,models):
+        raise NotImplementedError
+
+class ForwardFunction:
+    def __call__(self,models,d):
+        raise NotImplementedError
