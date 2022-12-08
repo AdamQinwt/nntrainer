@@ -150,7 +150,7 @@ class Trainer:
                 for idx, d in enumerate(tbar):
                     start_iter(stage,opt,sch,models,args,device)
                     outcomes,bs=forward_func(models,d,device)
-                    losses,total_losses=loss_func(outcomes,d,models)
+                    losses,total_losses=loss_func(outcomes,d,models,device)
                     total_losses.backward()
                     end_iter(stage,d,opt,sch,models,args,device)
                     l=loss_func.update_amgrid(am,stage,losses,total_losses,bs=bs)
