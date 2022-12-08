@@ -34,7 +34,8 @@ class ModelGroup:
         for model_name in models:
             param_dict={}
             param_dict=dictcpy(global_model_params,param_dict)
-            param_dict=dictcpy(model_params[model_name],param_dict)
+            if model_params is not None:
+                param_dict=dictcpy(model_params[model_name],param_dict)
             m0=CascadedModels(args[model_name].model_def,factory,param_dict).to(device)
             if model_name not in donnot_load:
                 if args[model_name].pretrained is not None: load(m0,args[model_name].pretrained)
