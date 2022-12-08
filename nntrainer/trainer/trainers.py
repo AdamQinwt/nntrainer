@@ -40,7 +40,7 @@ class ModelGroup:
             if model_name not in donnot_load:
                 if args[model_name].pretrained is not None: load(m0,args[model_name].pretrained)
             m[model_name]=m0
-            self.__setattr__('model_name',m0)
+            self.__setattr__(model_name,m0)
         self.m=m
     def __getitem__(self,idx):
         return self.m[idx]
