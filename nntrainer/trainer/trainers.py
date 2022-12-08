@@ -146,7 +146,7 @@ class Trainer:
         for epoch in range(nepoch):
             for stage in self.stages:
                 before_iter(stage,opt,sch,models,args,device)
-                tbar=tqdm.tqdm(self.data[stage],total=64,desc=f'Ep.{stage} {epoch}')
+                tbar=tqdm.tqdm(self.data[stage],total=len(self.data[stage]),desc=f'Ep.{stage} {epoch}')
                 for idx, d in enumerate(tbar):
                     batch_data=start_iter(stage,d,opt,sch,models,args,device)
                     outcomes,bs=forward_func(models,batch_data,device)
