@@ -12,7 +12,7 @@ import os
 
 def dictcpy(src=None,dst=None):
     if src is None: return dst
-    for k,v in src: dst[k]=v
+    for k,v in src.items(): dst[k]=v
     return dst
 
 class ModelGroup:
