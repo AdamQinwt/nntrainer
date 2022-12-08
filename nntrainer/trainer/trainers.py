@@ -111,7 +111,7 @@ class Trainer:
         self.args=args
         self.data=d
         self.model_names=list(models.m.keys())
-        self.opt_names=list(opt.m.keys())
+        self.opt_names=list(opt.keys())
         self.models=models
         self.opt=opt
         self.sch=sch
