@@ -19,6 +19,9 @@ def get_device():
 
 def argument_gpu():
     return ('--gpu',{'help':'Specify the GPUs to be used.','default':'0'})
+def argument_name():
+    return ('--name',{'help':'A unique name for the run.','default':''})
+
 def parse_args(introduction='',arguments=None):
     parser = argparse.ArgumentParser(introduction)
     parser.add_argument('--cfg', help="Specify the path of the path of the config(*.yaml)",
