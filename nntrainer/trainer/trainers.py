@@ -156,6 +156,7 @@ class Trainer:
         device=self.device
 
         for epoch in range(nepoch):
+            am.reset()
             for stage in self.stages:
                 before_iter(stage,opt,sch,models,args,device)
                 tbar=tqdm.tqdm(self.data[stage],total=len(self.data[stage]),desc=f'Ep.{stage} {epoch}')
