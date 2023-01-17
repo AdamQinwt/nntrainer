@@ -20,6 +20,14 @@ class Flatten(View):
     def __init__(self,*args,**kwargs):
         super(Flatten, self).__init__([-2,-1])
 
+class Mean(nn.Module):
+    def __init__(self, dim,*args,**kwargs):
+        super(Mean, self).__init__()
+        self.dim=dim
+
+    def forward(self, x):
+        return x.mean(self.dim)
+
 class Cat(nn.Module):
     def __init__(self, dim=-1,*args,**kwargs):
         super(Cat, self).__init__()

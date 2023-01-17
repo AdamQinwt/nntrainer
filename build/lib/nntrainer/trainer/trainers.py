@@ -7,12 +7,12 @@ from ..model_utils import CascadedModels,default_factories,WeightedSumLoss
 from .model_saveload import save,load
 from .optimizer import get_optimizer_sheduler_v2
 from .am import AMGrid
-from tqdm import tqdm
+import tqdm
 import os
 
 def dictcpy(src=None,dst=None):
     if src is None: return dst
-    for k,v in src: dst[k]=v
+    for k,v in src.items(): dst[k]=v
     return dst
 
 class ModelGroup:
@@ -34,12 +34,13 @@ class ModelGroup:
         for model_name in models:
             param_dict={}
             param_dict=dictcpy(global_model_params,param_dict)
-            param_dict=dictcpy(model_params[model_name],param_dict)
+            if model_params is not None:
+                param_dict=dictcpy(model_params[model_name],param_dict)
             m0=CascadedModels(args[model_name].model_def,factory,param_dict).to(device)
             if model_name not in donnot_load:
                 if args[model_name].pretrained is not None: load(m0,args[model_name].pretrained)
             m[model_name]=m0
-            self.__setattr__('model_name',m0)
+            self.__setattr__(model_name,m0)
         self.m=m
     def __getitem__(self,idx):
         return self.m[idx]
@@ -49,7 +50,7 @@ class ModelGroup:
         for mn in model_names:
             for p in self[mn].parameters():
                 e_d_paramlist.append(p)
-        return p
+        return e_d_paramlist
     def create_optimizers(self,args):
         opt,sch={},{}
         for opt_k,opt_params in args.items():
@@ -63,12 +64,24 @@ class ModelGroup:
             opt[opt_k]=opt0
             sch[opt_k]=sch0
         return opt,sch
-    def train(self):
-        for k,v in self.m.items(): v.train()
-    def valid(self):
-        for k,v in self.m.items(): v.eval()
-    def save(self,root_dir):
-        for k,v in self.m.items(): save(v,f'{root_dir}/{k}.pth')
+    def train(self,need=None):
+        for k,v in self.m.items():
+            if need is not None:
+                if k not in need:
+                    continue
+            v.train()
+    def valid(self,need=None):
+        for k,v in self.m.items():
+            if need is not None:
+                if k not in need:
+                    continue
+            v.eval()
+    def save(self,root_dir,need_save=None):
+        for k,v in self.m.items(): 
+            if need_save is None:
+                save(v,f'{root_dir}/{k}.pth')
+            elif k in need_save:
+                save(v,f'{root_dir}/{k}.pth')
 
 class Trainer:
     def __init__(
@@ -81,7 +94,7 @@ class Trainer:
         if device is None: device=get_device()
         d={}
         for dk,dv in data.items():
-            if not isinstance(dv): dv=load_dataset(dv,**args.data[dk].loader)
+            if not isinstance(dv,DataLoader): dv=load_dataset(dv,**args.data[dk].loader)
             d[dk]=dv
         if models is not None:
             models=ModelGroup(
@@ -110,7 +123,7 @@ class Trainer:
         self.args=args
         self.data=d
         self.model_names=list(models.m.keys())
-        self.opt_names=list(opt.m.keys())
+        self.opt_names=list(opt.keys())
         self.models=models
         self.opt=opt
         self.sch=sch
@@ -127,13 +140,13 @@ class Trainer:
         ):
 
         if before_iter is None: before_iter=DoNothing
-        elif before_iter=='normal': before_iter=PrepareStageNormal
+        elif before_iter=='normal': before_iter=PrepareStageNormal()
         if start_iter is None: start_iter=DoNothing
-        elif start_iter=='normal': start_iter=StartIterNormal
+        elif start_iter=='normal': start_iter=StartIterNormal()
         if end_iter is None: end_iter=DoNothing
-        elif end_iter=='normal': end_iter=EndIterNormal
+        elif end_iter=='normal': end_iter=EndIterNormal()
         if after_iter is None: after_iter=DoNothing
-        elif after_iter=='normal': after_iter=AfterIterNormal
+        elif after_iter=='normal': after_iter=AfterIterNormal()
         opt=self.opt
         sch=self.sch
         models=self.models
@@ -143,15 +156,16 @@ class Trainer:
         device=self.device
 
         for epoch in range(nepoch):
+            am.reset()
             for stage in self.stages:
                 before_iter(stage,opt,sch,models,args,device)
-                tbar=tqdm.tqdm(self.data[stage],total=64,desc=f'Ep.{stage} {epoch}')
+                tbar=tqdm.tqdm(self.data[stage],total=len(self.data[stage]),desc=f'Ep.{stage} {epoch}')
                 for idx, d in enumerate(tbar):
-                    start_iter(stage,opt,sch,models,args,device)
-                    outcomes,bs=forward_func(models,d,device)
-                    losses,total_losses=loss_func(outcomes,d,models)
+                    batch_data=start_iter(stage,d,opt,sch,models,args,device)
+                    outcomes,bs=forward_func(models,batch_data,device)
+                    losses,total_losses=loss_func(outcomes,batch_data,models,device)
                     total_losses.backward()
-                    end_iter(stage,d,opt,sch,models,args,device)
+                    end_iter(stage,batch_data,opt,sch,models,args,device)
                     l=loss_func.update_amgrid(am,stage,losses,total_losses,bs=bs)
                     tbar.set_postfix({'loss':l})
                 after_iter(stage,opt,sch,models,args)
@@ -166,23 +180,43 @@ class StageFunc(DoNothing):
     def valid(self,*args,**kwargs):
         pass
     def __call__(self, stage,*args, **kwargs):
-        eval(f'self.{stage}')(*args,**kwargs)
+        return eval(f'self.{stage}')(*args,**kwargs)
 class PrepareStageNormal(StageFunc):
+    def __init__(self,need_tune=None):
+        self.need_tune=None
     def train(self, opt, sch, models,*args,**kwargs):
-        models.train()
+        models.train(self.need_tune)
     def valid(self, opt, sch, models,*args,**kwargs):
-        models.valid()
+        models.valid(self.need_tune)
 class StartIterNormal(StageFunc):
-    def train(self, opt, sch, models,*args,**kwargs):
-        for k,v in opt.items(): v.zero_grad()
+    def __init__(self,need=None):
+        self.need=need
+    def train(self, d,opt, sch, models,cfg,device,*args,**kwargs):
+        if self.need is None:
+            for k,v in opt.items(): v.zero_grad()
+        else:
+            for ne in self.need:
+                opt[ne].zero_grad()
+        return [dd.to(device) for dd in d]
+    def valid(self, d,opt, sch, models,cfg,device,*args,**kwargs):
+        return [dd.to(device) for dd in d]
 class EndIterNormal(StageFunc):
-    def train(self, opt, sch, models,*args,**kwargs):
-        for k,v in opt.items(): v.step()
+    def __init__(self,need=None):
+        self.need=need
+    def train(self, d,opt, sch, models,*args,**kwargs):
+        if self.need is None:
+            for k,v in opt.items(): v.step()
+        else:
+            for ne in self.need:
+                opt[ne].step()
 class AfterIterNormal(StageFunc):
+    def __init__(self,need_save=None):
+        super(StageFunc,self).__init__()
+        self.need_save=need_save
     def train(self, opt, sch, models,*args,**kwargs):
         for k,v in sch.items(): v.step()
     def valid(self, opt, sch, models,config,*args,**kwargs):
-        models.save(config.root_dir)
+        models.save(config.root_dir,self.need_save)
 
 class CalcLoss:
     def __call__(self,outcomes,d,models):

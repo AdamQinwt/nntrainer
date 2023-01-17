@@ -59,7 +59,8 @@ def get_optimizer_sheduler(parameters,type_opt,type_sch,param_dict_optimizer,*ar
     try:
         optimizer=get_optimizer(parameters,type_opt,param_dict_optimizer)
         scheduler=get_scheduler(optimizer,type_sch,**kwargs)
-    except:
+    except Exception as exp:
+        print(exp)
         raise ValueError
     return optimizer,scheduler
 

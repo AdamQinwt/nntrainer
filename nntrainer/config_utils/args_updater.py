@@ -71,4 +71,9 @@ def update_config(config,config_file,allow_extra,*args,**kwargs):
         else:
             if not allow_extra:
                 raise ValueError("{} not exist in config.py".format(k))
+            else:
+                if isinstance(v, dict):
+                    config=_update_dict(config,k, v,allow_extra,*args,**kwargs)
+                else:
+                    config[k] = v
     return config

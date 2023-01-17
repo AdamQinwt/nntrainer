@@ -61,7 +61,7 @@ def _update_dict(config,k, v,allow_extra,*args,**kwargs):
 
 def update_config(config,config_file,allow_extra,*args,**kwargs):
     with open(config_file) as f:
-        exp_config = edict(yaml.load(f,Loader=yaml.BaseLoader))
+        exp_config = edict(yaml.load(f,Loader=yaml.FullLoader))
     for k, v in exp_config.items():
         if k in config:
             if isinstance(v, dict):
