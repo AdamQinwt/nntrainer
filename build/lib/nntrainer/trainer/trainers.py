@@ -76,12 +76,146 @@ class ModelGroup:
                 if k not in need:
                     continue
             v.eval()
+    def train_valid(self,need_train=None,need_eval=None):
+        if need_train is not None: self.train(need_train)
+        if need_eval is not None: self.valid(need_eval)
     def save(self,root_dir,need_save=None):
         for k,v in self.m.items(): 
             if need_save is None:
                 save(v,f'{root_dir}/{k}.pth')
             elif k in need_save:
                 save(v,f'{root_dir}/{k}.pth')
+    @staticmethod
+    def step(x,need=None):
+        # step opt or sch
+        for k,v in x.items():
+            if need is not None:
+                if k not in need:
+                    continue
+            if v is not None: v.step()
+    @staticmethod
+    def train_batch(data_in,models,opt,forward_func,loss_func,loss_keys,need_train=None,need_eval=None,**extra_args):
+        models.train_valid(need_train,need_eval)
+        opt.zero_grad()
+        rdict=forward_func(data_in,models,**extra_args)
+        ldict={k:v for k,v in rdict.items() if k in loss_keys}
+        if 'data' in loss_keys: ldict['data']=data_in
+        if 'models' in loss_keys: ldict['models']=models
+        for k,v in extra_args.items():
+            if k in loss_keys:
+                ldict[k]=v
+        losses,loss_totals=loss_func(**ldict)
+        loss_totals.backward()
+        rdict['losses']=losses
+        rdict['loss_totals']=loss_totals
+        opt.step()
+        return rdict
+    @staticmethod
+    def valid_batch(data_in,models,forward_func,loss_func,loss_keys,need_eval=None,**extra_args):
+        models.train_valid(None,need_eval)
+        rdict=forward_func(data_in,models,**extra_args)
+        ldict={k:v for k,v in rdict.items() if k in loss_keys}
+        if 'data' in loss_keys: ldict['data']=data_in
+        if 'models' in loss_keys: ldict['models']=models
+        for k,v in extra_args.items():
+            if k in loss_keys:
+                ldict[k]=v
+        losses,loss_totals=loss_func(**ldict)
+        rdict['losses']=losses
+        rdict['loss_totals']=loss_totals
+        return rdict
+
+class StageLoss:
+    def __init__(self,weighted_loss_function):
+        self.wsl=weighted_loss_function
+    def update_amgrid(self,*args,**kwargs): return self.wsl.update_amgrid(*args,**kwargs)
+    def __call__(self,*args,**kwargs):
+        return self.wsl(*args,**kwargs)
+
+class StageTrainer:
+    def __init__(
+            self,
+            models,
+            opt,sch,
+            **extra_args
+    ):
+        self.models=models
+        self.opt=opt
+        self.sch=sch
+        self.extra_args=extra_args
+        self.stages={}
+    def add_stage(self,stage_type,stage_name,forward_function,loss_function,loss_keys,loss_names,total_loss_name=None,opt=None,opt_name=None,need_train=None,need_valid=None,**extra_args):
+        self.stages[stage_name]={
+            'stage_type': stage_type,
+            'forward_func': forward_function,
+            'loss_func': loss_function,
+            'loss_keys': loss_keys,
+            'loss_names': loss_names,
+            'total_loss_name': total_loss_name,
+            'need_train': need_train,
+            'need_valid': need_valid,
+            'extra_args': extra_args,
+        }
+        if opt_name is None: opt_name=stage_name
+        if opt: self.stages[stage_name]['optimizer']=opt[opt_name]
+    def collect_names(self):
+        rows=[]
+        cols=[]
+        for k,v in self.stages.items():
+            cols.append(k)
+            for loss_name in v['loss_names']:
+                if loss_name in rows: continue
+                rows.append(loss_name)
+            if v['total_loss_name'] in rows: continue
+            rows.append(v['total_loss_name'])
+        return rows,cols
+    def deactivate_amgrid_entry(self,amgrid):
+        for stage_name,stage_info in self.stages.items():
+            total_loss_name=stage_info['total_loss_name']
+            loss_names=stage_info['loss_names']
+            for loss_item in amgrid.rows:
+                if loss_item not in loss_names and not loss_item == total_loss_name:
+                    amgrid.deactivate(loss_item,stage_name)
+    def activate_amgrid_for_stages(self,amgrid,row_name,stages=None):
+        if isinstance(row_name,str): row_name=[row_name]
+        if stages is None: stages=self.stages.keys()
+        for rn in row_name:
+            for s in stages: amgrid.activate(rn,s)
+    def __call__(self,stage_name,data_in,amgrid=None,**extra_args):
+        stage=self.stages[stage_name]
+        ea={}
+        for k,v in extra_args.items(): ea[k]=v
+        for k,v in stage['extra_args'].items(): ea[k]=v
+        stage_type=stage['stage_type']
+        if stage_type=='train':
+            rdict=ModelGroup.train_batch(
+                data_in,
+                self.models,
+                stage['optimizer'],
+                stage['forward_func'],
+                stage['loss_func'],
+                stage['loss_keys'],
+                stage['need_train'],
+                stage['need_valid'],
+                **ea
+            )
+        elif stage_type=='valid':
+            rdict=ModelGroup.valid_batch(
+                data_in,
+                self.models,
+                stage['forward_func'],
+                stage['loss_func'],
+                stage['loss_keys'],
+                stage['need_valid'],
+                **ea
+            )
+        else: raise ValueError
+        if amgrid is not None:
+            # print(rdict)
+            l=stage['loss_func'].update_amgrid(amgrid,stage_name,rdict['losses'],rdict['loss_totals'],stage['total_loss_name'],bs=rdict['bs'])
+            # print(l)
+        else: l=None
+        return rdict,l
 
 class Trainer:
     def __init__(

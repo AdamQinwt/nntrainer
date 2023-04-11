@@ -71,7 +71,8 @@ class WeightedSumLoss(nn.Module):
     def update_amgrid(self,amg,column,loss,totals,name='loss',bs=1):
         for k,v in loss.items():
             l=amg+[v.detach().cpu().item(),bs,k,column]
-        l=amg+[totals.detach().cpu().item(),bs,name,column]
+        if name is not None:
+            l=amg+[totals.detach().cpu().item(),bs,name,column]
         return l
 
 class CosineLoss(nn.Module):

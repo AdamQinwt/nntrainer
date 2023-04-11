@@ -56,6 +56,7 @@ def _update_dict(config,k, v,allow_extra,*args,**kwargs):
         else:
             if not allow_extra:
                 raise ValueError("{}.{} not exist in config.py".format(k, vk))
+            else: config[k][vk] = vv
     return config
 
 
@@ -71,4 +72,6 @@ def update_config(config,config_file,allow_extra,*args,**kwargs):
         else:
             if not allow_extra:
                 raise ValueError("{} not exist in config.py".format(k))
+            else:
+                config[k] = v
     return config
