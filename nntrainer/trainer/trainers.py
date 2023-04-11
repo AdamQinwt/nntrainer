@@ -134,8 +134,9 @@ class StageLoss:
     def __init__(self,weighted_loss_function):
         self.wsl=weighted_loss_function
     def update_amgrid(self,*args,**kwargs): return self.wsl.update_amgrid(*args,**kwargs)
-    def __call__(self,*args,**kwargs):
-        return self.wsl(*args,**kwargs)
+    def __call__(self,**kwargs):
+        al=[v for k,v in kwargs.items()]
+        return self.wsl(*al)
 
 class StageTrainer:
     def __init__(

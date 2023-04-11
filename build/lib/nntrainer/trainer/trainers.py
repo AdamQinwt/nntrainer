@@ -89,6 +89,7 @@ class ModelGroup:
         mps={}
         for k,v in self.m.items():
             mps[k]=model_param_stat(v)
+        return mps
     @staticmethod
     def step(x,need=None):
         # step opt or sch
@@ -133,8 +134,9 @@ class StageLoss:
     def __init__(self,weighted_loss_function):
         self.wsl=weighted_loss_function
     def update_amgrid(self,*args,**kwargs): return self.wsl.update_amgrid(*args,**kwargs)
-    def __call__(self,*args,**kwargs):
-        return self.wsl(*args,**kwargs)
+    def __call__(self,**kwargs):
+        al=[v for k,v in kwargs.items()]
+        return self.wsl(*al)
 
 class StageTrainer:
     def __init__(
