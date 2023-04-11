@@ -257,7 +257,7 @@ class Stage:
         self.info['loss_names']=loss_names
         self.info['loss_function']=StageLoss(WeightedSumLoss(loss_names,loss_weights,*args))
         self.info['total_loss_name']=total_loss_name
-    def set(self,k,v): self.k=v
+    def set(self,k,v): self.info[k]=v
     def add_to_trainer(self,trainer):
         trainer.add_stage(**self.info)
 
