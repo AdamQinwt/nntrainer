@@ -3,7 +3,7 @@ import torch.nn as nn
 from ..config_utils import get_device
 from ..data_utils import load_dataset
 from torch.utils.data import DataLoader,Dataset
-from ..model_utils import CascadedModels,default_factories,WeightedSumLoss,model_param_stat
+from ..model_utils import CascadedModels,default_factories,WeightedSumLoss,model_param_stat,weights_init_normal
 from .model_saveload import save,load
 from .optimizer import get_optimizer_sheduler_v2
 from .am import AMGrid
@@ -76,6 +76,12 @@ class ModelGroup:
                 if k not in need:
                     continue
             v.eval()
+    def weight_init(self,need=None):
+        for k,v in self.m.items():
+            if need is not None:
+                if k not in need:
+                    continue
+            weights_init_normal(v)
     def train_valid(self,need_train=None,need_eval=None):
         if need_train is not None: self.train(need_train)
         if need_eval is not None: self.valid(need_eval)
