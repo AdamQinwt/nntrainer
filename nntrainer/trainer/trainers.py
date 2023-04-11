@@ -3,7 +3,7 @@ import torch.nn as nn
 from ..config_utils import get_device
 from ..data_utils import load_dataset
 from torch.utils.data import DataLoader,Dataset
-from ..model_utils import CascadedModels,default_factories,WeightedSumLoss
+from ..model_utils import CascadedModels,default_factories,WeightedSumLoss,model_param_stat
 from .model_saveload import save,load
 from .optimizer import get_optimizer_sheduler_v2
 from .am import AMGrid
@@ -85,6 +85,10 @@ class ModelGroup:
                 save(v,f'{root_dir}/{k}.pth')
             elif k in need_save:
                 save(v,f'{root_dir}/{k}.pth')
+    def model_param_stat(self):
+        mps={}
+        for k,v in self.m.items():
+            mps[k]=model_param_stat(v)
     @staticmethod
     def step(x,need=None):
         # step opt or sch
