@@ -230,6 +230,35 @@ class StageTrainer:
         else: l=None
         return rdict,l
 
+class Stage:
+    def __init__(
+            self,
+            stage_type,
+            stage_name,
+            forward_function,
+            need_train=None,
+            need_valid=None,
+            **extra_args,
+        ):
+        self.info={
+            'stage_type': stage_type,
+            'stage_name': stage_name,
+            'forward_function': forward_function,
+            'need_train': need_train,
+            'need_valid': need_valid,
+        }
+        for k,v in extra_args.items():
+            self.info[k]=v
+    def set_opt(self,opt=None,opt_name=None):
+        self.info['opt']=opt
+        self.info['opt_name']=opt_name
+    def set_loss(self,total_loss_name,loss_keys,loss_names,loss_weights,*args):
+        self.info['loss_keys']=loss_keys
+        self.info['loss_names']=loss_names
+        self.info['loss_function']=StageLoss(WeightedSumLoss(loss_names,loss_weights,*args))
+        self.info['total_loss_name']=total_loss_name
+    def set(self,k,v): self.k=v
+
 class Trainer:
     def __init__(
         self,args,
