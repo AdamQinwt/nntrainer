@@ -89,6 +89,7 @@ class ModelGroup:
         mps={}
         for k,v in self.m.items():
             mps[k]=model_param_stat(v)
+        return mps
     @staticmethod
     def step(x,need=None):
         # step opt or sch
