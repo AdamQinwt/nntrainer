@@ -37,7 +37,7 @@ class ModelGroup:
             if model_params is not None:
                 param_dict=dictcpy(model_params[model_name],param_dict)
             m0=CascadedModels(args[model_name].model_def,factory,param_dict).to(device)
-            weights_init_normal(m0)
+            # weights_init_normal(m0)
             if model_name not in donnot_load:
                 if args[model_name].pretrained is not None: load(m0,args[model_name].pretrained)
             m[model_name]=m0
