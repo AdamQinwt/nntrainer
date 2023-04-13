@@ -126,15 +126,16 @@ class ModelGroup:
     def valid_batch(data_in,models,forward_func,loss_func,loss_keys,need_eval=None,**extra_args):
         models.train_valid(None,need_eval)
         rdict=forward_func(data_in,models,**extra_args)
-        ldict={k:v for k,v in rdict.items() if k in loss_keys}
-        if 'data' in loss_keys: ldict['data']=data_in
-        if 'models' in loss_keys: ldict['models']=models
-        for k,v in extra_args.items():
-            if k in loss_keys:
-                ldict[k]=v
-        losses,loss_totals=loss_func(**ldict)
-        rdict['losses']=losses
-        rdict['loss_totals']=loss_totals
+        if loss_func is not None:
+            ldict={k:v for k,v in rdict.items() if k in loss_keys}
+            if 'data' in loss_keys: ldict['data']=data_in
+            if 'models' in loss_keys: ldict['models']=models
+            for k,v in extra_args.items():
+                if k in loss_keys:
+                    ldict[k]=v
+            losses,loss_totals=loss_func(**ldict)
+            rdict['losses']=losses
+            rdict['loss_totals']=loss_totals
         return rdict
 
 class StageLoss:
