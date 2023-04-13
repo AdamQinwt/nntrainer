@@ -157,7 +157,7 @@ class StageTrainer:
         self.sch=sch
         self.extra_args=extra_args
         self.stages={}
-    def add_stage(self,stage_type,stage_name,forward_function,loss_function,loss_keys,loss_names,total_loss_name=None,opt=None,opt_name=None,need_train=None,need_valid=None,**extra_args):
+    def add_stage(self,stage_type,stage_name,forward_function=None,loss_function=None,loss_keys=None,loss_names=None,total_loss_name=None,opt=None,opt_name=None,need_train=None,need_valid=None,**extra_args):
         self.stages[stage_name]={
             'stage_type': stage_type,
             'forward_func': forward_function,
