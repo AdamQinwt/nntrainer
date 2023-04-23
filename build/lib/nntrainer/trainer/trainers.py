@@ -92,9 +92,9 @@ class ModelGroup:
     def save(self,root_dir,need_save=None):
         for k,v in self.m.items(): 
             if need_save is None:
-                save(v,f'{root_dir}/{k}.pth')
+                save(v.cpu(),f'{root_dir}/{k}.pth')
             elif k in need_save:
-                save(v,f'{root_dir}/{k}.pth')
+                save(v.cpu(),f'{root_dir}/{k}.pth')
     def model_param_stat(self):
         mps={}
         for k,v in self.m.items():
